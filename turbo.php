@@ -26,17 +26,14 @@ define('GITHUB_URL','https://github.com/chrisatomix/opencart-turbo/');
 $index_list   = array();
 $index_list[] = 'product.model';
 
-
-
 $action = (!empty($_REQUEST['action'])) ? $_REQUEST['action'] : '';
 
 if(file_exists('./config.php')) {
   require_once './config.php';
-}
-else {
-
+} else {
   die("Aborting: config.php not found!");
 }
+
 if(!$db = turbo_db_connect()) {
   die("Unable to connect to DB - Check Settings");
 }
@@ -56,9 +53,7 @@ if(!$db = turbo_db_connect()) {
   <br>
   <div class="container">
     <div class="well">
-
       <h2>Opencart Turbo<br><small>Developed by <a href="http://www.atomix.com.au">Atomix</a></h2>
-
       <p>
         This script will apply several changes to boost the performance of OpenCart, including:<br>
         <ul>
@@ -74,7 +69,6 @@ if(!$db = turbo_db_connect()) {
         </ul>
       </p>
     </div>
-
     <div class="panel panel-primary">
       <div class="panel-heading">
         <h3 class="panel-title">Available Options</h3>
@@ -84,7 +78,6 @@ if(!$db = turbo_db_connect()) {
         <a href="turbo.php?action=indexes" class="btn btn-success btn-lg" onclick="return confirm('Are you sure you want to add Indexes to your Opencart database tables?');">Add Database Indexes</a>
       </div>
     </div>
-
     <div class="panel panel-default">
       <div class="panel-heading">
         <h3 class="panel-title">Output</h3>
@@ -114,9 +107,6 @@ if(!$db = turbo_db_connect()) {
 </body>
 </html>
 <?php
-
-
-
 function turbo_table_indexes() {
   global $db, $index_list;
 
@@ -138,17 +128,14 @@ function turbo_table_indexes() {
         if(substr($column_name, -3) == '_id') {
           // Column ends in '_id'
           $needs_index = true;
-        }
-        elseif(in_array($table_name.'.'.$column_name, $index_list)) {
+        } elseif(in_array($table_name.'.'.$column_name, $index_list)) {
           // This column exists in the manual index list
           $needs_index = true;
         }
 
         // Loop through the indexes for this column to determine if it has one already
         if($column['indexes'] && !empty($column['indexes'])) {
-
           foreach($column['indexes'] as $index) {
-
             if($index['position'] == 1) {
               // This column is in first position in an Index
               $has_index = true;
@@ -161,20 +148,16 @@ function turbo_table_indexes() {
           $sql = "ALTER TABLE `{$table_name}` ADD INDEX (  `{$column_name}` )";
           if($output = $db->query($sql)) {
             turbo_log("{$table_name}.{$column_name} - Index Added",'success','SUCCESS');
-          }
-          else {
+          } else {
             turbo_log("{$table_name}.{$column_name} - Index Add Failed - ".$db->error,'danger','ERROR');
           }
-        }
-        elseif($needs_index) {
+        } elseif($needs_index) {
           // Needs an Index but already has one
           turbo_log("{$table_name}.{$column_name} - Index Already Exists",'info','INFO');
         }
       }
     }
-
-  }
-  else {
+  } else {
     turbo_log("Aborting",'danger','ERROR');
   }
 }
@@ -188,27 +171,21 @@ function turbo_switch_engine() {
     turbo_log("Switching DB Table Engines");
 
     foreach ($tables as $table_name => $table) {
-
       if($table['engine'] != 'InnoDB') {
-
         $sql = "ALTER TABLE `{$table_name}` ENGINE = INNODB";
         if($rs = $db->query($sql)) {
           turbo_log("{$table_name} Converted from {$table['engine']} to InnoDB",'success','SUCCESS');
-        }
-        else {
+        } else {
           turbo_log("{$table_name} Engine Switch Failed - ".$db->error,'danger','ERROR');
         }
-      }
-      else {
+      } else {
         turbo_log("{$table_name} Already InnoDB",'info','SKIP');
       }
     }
-  }
-  else {
+  } else {
     turbo_log("Aborting",'danger','ERROR');
   }
 }
-
 
 function turbo_get_tables($getindexes=false) {
   global $db;
@@ -221,14 +198,12 @@ function turbo_get_tables($getindexes=false) {
       turbo_log("{$rs->num_rows} Tables Found");
       $tables = array();
       while ($row = $rs->fetch_assoc()) {
-
         $table               = array();
         $table['name']       = $row['TABLE_NAME'];
         $table['engine']     = $row['ENGINE'];
         $table['columns']    = false;
 
         if($getindexes) {
-
           // Get indexes first
           $sqli = "SELECT *
                   FROM INFORMATION_SCHEMA.STATISTICS
@@ -236,7 +211,6 @@ function turbo_get_tables($getindexes=false) {
                   AND TABLE_NAME LIKE '".$table['name']."'";
           $table['indexes'] = array();
           if($rsi = $db->query($sqli)) {
-
             while($indexes = $rsi->fetch_assoc()) {
 
               $index             = array();
@@ -259,7 +233,6 @@ function turbo_get_tables($getindexes=false) {
                   AND TABLE_NAME LIKE '".$table['name']."'";
 
           if($rsc = $db->query($sqlc)) {
-
             $table['columns'] = array();
             while($columns = $rsc->fetch_assoc()) {
 
@@ -274,30 +247,23 @@ function turbo_get_tables($getindexes=false) {
               }
               $table['columns'][$column['name']] = $column;
             }
-          }
-          else {
+          } else {
             turbo_log("No DB Columns Found in Table {$table['name']}",'danger','ERROR');
           }
         }
         $tables[$table['name']] = $table;
       }
-    }
-    else {
+    } else {
       // No tables found
       turbo_log("No DB Tables Found",'danger','Error');
     }
-
-  }
-  else {
+  } else {
     turbo_log("Error: Unable to retrieve DB Table List");
   }
   return $tables;
 }
 
-
-
 function turbo_log($input,$type='default',$label='') {
-
   if($label) {
     echo '<span class="label label-'.$type.'">'.$label.'</span> ';
   }
